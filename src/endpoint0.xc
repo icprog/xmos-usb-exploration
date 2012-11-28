@@ -135,7 +135,7 @@ unsigned char fullSpdConfDesc[] =
 static unsigned char stringDescriptors[][40] = {
 	"\009\004",                    // Language string
   	"XMOS",				           // iManufacturer 
- 	"Example Mouse" 			   // iProduct
+ 	"Example" 					   // iProduct
  	"" 			                   // unUsed
  	"Config"   			           // iConfiguration
 };
