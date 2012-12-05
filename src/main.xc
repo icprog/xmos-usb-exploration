@@ -24,14 +24,14 @@
 #include "xud.h"
 #include "usb.h"
 
-#define XUD_EP_COUNT_OUT   1
+#define XUD_EP_COUNT_OUT   2
 #define XUD_EP_COUNT_IN    2
 
 #define USB_RST_PORT    XS1_PORT_1I
 
 
 /* Endpoint type tables */
-XUD_EpType epTypeTableOut[XUD_EP_COUNT_OUT] = {XUD_EPTYPE_CTL};
+XUD_EpType epTypeTableOut[XUD_EP_COUNT_OUT] = {XUD_EPTYPE_CTL, XUD_EPTYPE_BUL};
 XUD_EpType epTypeTableIn[XUD_EP_COUNT_IN] =   {XUD_EPTYPE_CTL, XUD_EPTYPE_BUL};
 
 /* USB Port declarations */
@@ -40,72 +40,56 @@ on stdcore[USB_CORE]: clock    clk       = XS1_CLKBLK_3;
 
 void Endpoint0( chanend c_ep0_out, chanend c_ep0_in);
 
-char reportBuffer[] = {0, 0, 0, 0};
+char reportBufferIN[] = {0};
+char reportBufferOUT[] = {0, 0, 0, 0};
 
-/*
- * This function responds to the HID requests - it draws a square using the mouse moving 40 pixels
- * in each direction in sequence every 100 requests.
- */
-void hid(chanend chan_ep1) 
+void testIN(chanend chan_ep1_in) 
 {
     int counter = 0;
     int state = 0;
     
-    XUD_ep c_ep1 = XUD_Init_Ep(chan_ep1);
+    XUD_ep c_ep1 = XUD_Init_Ep(chan_ep1_in);
    
     counter = 0;
     while(1) 
     {
         counter++;
-        if(counter == 400) 
-        {
-            if(state == 0) 
-            {
-                reportBuffer[1] = 40;
-                reportBuffer[2] = 0; 
-                state+=1;
-            } 
-            else if(state == 1) 
-            {
-                reportBuffer[1] = 0;
-                reportBuffer[2] = 40;
-                state+=1;
-            } 
-            else if(state == 2) 
-            {
-                reportBuffer[1] = -40;
-                reportBuffer[2] = 0; 
-                state+=1;
-            } 
-            else if(state == 3) 
-            {
-                reportBuffer[1] = 0;
-                reportBuffer[2] = -40;
-                state = 0;
-            }
-            counter = 0;
-        } 
-        else 
-        {
-            reportBuffer[1] = 0;
-            reportBuffer[2] = 0; 
-        }
+        reportBufferIN[0] = counter%0xFF;
 
-        if (XUD_SetBuffer(c_ep1, reportBuffer, 4) < 0)
+        if (XUD_SetBuffer(c_ep1, reportBufferIN, 1) < 0)
         {
             XUD_ResetEndpoint(c_ep1, null);
+            counter = 0;
         }
-    }
+	}
+}
+void testOUT(chanend chan_ep1_out) 
+{
+    int counter = 0;
+    int state = 0;
+    
+    XUD_ep c_ep1 = XUD_Init_Ep(chan_ep1_out);
+   
+    counter = 0;
+    while(1) 
+    {
+        if (XUD_SetBuffer(c_ep1, reportBufferOUT, 4) < 0)
+        {
+            XUD_ResetEndpoint(c_ep1, null);
+            counter = 0;
+        }
+	}
 }
 
 /*
- * The main function fires of three processes: the XUD manager, Endpoint 0, and hid. An array of
- * channels is used for both in and out endpoints, endpoint zero requires both, hid is just an
+ * The main function fires off three processes: the XUD manager, Endpoint 0, and 'test'. An array of
+ * channels is used for both in and out endpoints, endpoint zero requires both, 'test' is just an
  * IN endpoint.
  */
+
 int main() 
 {
-    chan c_ep_out[1], c_ep_in[2];
+    chan c_ep_out[2], c_ep_in[2];
     par 
     {
         
@@ -122,7 +106,12 @@ int main()
         on stdcore[USB_CORE]:
         {
             set_thread_fast_mode_on();
-            hid(c_ep_in[1]);
+            testIN(c_ep_in[1]);
+		}
+        on stdcore[USB_CORE]:
+        {
+            set_thread_fast_mode_on();
+            testOUT(c_ep_out[1]);
         }
     }
 

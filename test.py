@@ -9,4 +9,4 @@ XMOS_TEST_EP_OUT = 0x01
 
 dev = usb.core.find(idVendor=XMOS_TEST_VID, idProduct=XMOS_TEST_PID)
 while True:
-	print dev.read(XMOS_TEST_EP_IN, 4, 0, 1000)
+	print map(hex, dev.read(XMOS_TEST_EP_IN, 4, 0, 1000))
