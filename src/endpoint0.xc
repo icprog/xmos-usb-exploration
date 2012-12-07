@@ -133,15 +133,28 @@ unsigned char fullSpdConfDesc[] =
 
 
 static unsigned char stringDescriptors[][40] = {
-	"\009\004",                    // Language string
-  	"XMOS",				           // iManufacturer 
+	"\x09\x04",            // Language string
+  "Nonolith Labs",				         // iManufacturer 
  	"Example" 					   // iProduct
- 	"" 			                   // unUsed
- 	"Config"   			           // iConfiguration
 };
+
+extern unsigned char DeviceDescriptor[100];
+extern unsigned  len_DeviceDescriptor;
+
+extern unsigned char ConfigurationDescriptor[100];
+extern unsigned  len_ConfigurationDescriptor;
+
+extern unsigned char DeviceDescriptorFS[100];
+extern unsigned  len_DeviceDescriptorFS;
+
+extern unsigned char ConfigurationDescriptorFS[100];
+extern unsigned  len_ConfigurationDescriptorFS;
+
+
 
 extern int min(int a, int b);
 
+#pragma unsafe arrays
 void Endpoint0( chanend chan_ep0_out, chanend chan_ep0_in)
 {
     unsigned char buffer[1024];
@@ -156,9 +169,12 @@ void Endpoint0( chanend chan_ep0_out, chanend chan_ep0_in)
         /* Do standard enumeration requests */ 
         int retVal = 0;
 
-        retVal = DescriptorRequests(c_ep0_out, c_ep0_in, hiSpdDesc, sizeof(hiSpdDesc), 
-            hiSpdConfDesc, sizeof(hiSpdConfDesc), fullSpdDesc, sizeof(fullSpdDesc), 
-            fullSpdConfDesc, sizeof(fullSpdConfDesc), stringDescriptors, sp);
+        retVal = DescriptorRequests(c_ep0_out, c_ep0_in,
+            DeviceDescriptor,          len_DeviceDescriptor, 
+            ConfigurationDescriptor,   len_ConfigurationDescriptor,
+            DeviceDescriptorFS,        len_DeviceDescriptorFS, 
+            ConfigurationDescriptorFS, len_ConfigurationDescriptorFS,
+            stringDescriptors, sp);
         
         if (retVal)
         {
