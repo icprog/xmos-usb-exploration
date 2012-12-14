@@ -41,44 +41,37 @@ on stdcore[USB_CORE]: clock    clk       = XS1_CLKBLK_3;
 void Endpoint0( chanend c_ep0_out, chanend c_ep0_in);
 
 char reportBufferIN[] = {0};
-char reportBufferOUT[] = {0, 0, 0, 0};
+char reportBufferOUT[] = {0};
 
-void testIN(chanend chan_ep1_in) 
+void testIN(chanend chan_ep1_in, chanend in2out) 
 {
-    int counter = 0;
-    int state = 0;
-    
-    XUD_ep c_ep1 = XUD_Init_Ep(chan_ep1_in);
+    XUD_ep c_ep1_in = XUD_Init_Ep(chan_ep1_in);
    
-    counter = 0;
     while(1) 
     {
-        counter++;
-        reportBufferIN[0] = counter%0xFF;
+        in2out :> reportBufferIN[0];
 
-        if (XUD_SetBuffer(c_ep1, reportBufferIN, 1) < 0)
+        if (XUD_SetBuffer(c_ep1_in, reportBufferIN, 1) < 0)
         {
-            XUD_ResetEndpoint(c_ep1, null);
-            counter = 0;
+            XUD_ResetEndpoint(c_ep1_in, null);
         }
 	}
 }
-void testOUT(chanend chan_ep1_out) 
+
+void testOUT(chanend chan_ep1_out, chanend in2out)
 {
-    int counter = 0;
-    int state = 0;
-    
-    XUD_ep c_ep1 = XUD_Init_Ep(chan_ep1_out);
-   
-    counter = 0;
-    while(1) 
-    {
-        if (XUD_SetBuffer(c_ep1, reportBufferOUT, 4) < 0)
-        {
-            XUD_ResetEndpoint(c_ep1, null);
-            counter = 0;
-        }
-	}
+	XUD_ep c_ep1_out = XUD_Init_Ep(chan_ep1_out);
+	int len;
+	while(1) {
+		len = XUD_GetBuffer(c_ep1_out, reportBufferOUT);
+		if (len < 0) {
+			XUD_ResetEndpoint(c_ep1_out, null);
+    	}
+		else {
+			in2out <: reportBufferOUT[0];
+		}
+    }
+   return;
 }
 
 /*
@@ -90,6 +83,7 @@ void testOUT(chanend chan_ep1_out)
 int main() 
 {
     chan c_ep_out[2], c_ep_in[2];
+	chan in2out;
     par 
     {
         
@@ -106,12 +100,13 @@ int main()
         on stdcore[USB_CORE]:
         {
             set_thread_fast_mode_on();
-            testIN(c_ep_in[1]);
+            testIN(c_ep_in[1], in2out);
 		}
         on stdcore[USB_CORE]:
         {
             set_thread_fast_mode_on();
-            testOUT(c_ep_out[1]);
+            testOUT(c_ep_out[1], in2out);
+			
         }
     }
 
