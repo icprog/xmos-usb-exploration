@@ -52,7 +52,7 @@ void testIN(chanend chan_ep1_in, chanend in2out)
 	while(1) 
 	{
 		in2out :> reportBufferIN[0];
-		len = XUD_SetBuffer(c_ep1_in, reportBufferIN, 1);
+		len = XUD_SetBuffer(c_ep1_in, reportBufferIN, 512);
 		if (len < 0)
 		{
 			XUD_ResetEndpoint(c_ep1_in, null);
