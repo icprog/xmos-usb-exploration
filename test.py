@@ -3,13 +3,15 @@
 import usb
 import time
 
-XMOS_TEST_VID = 0x9999
-XMOS_TEST_PID = 0xffff
-XMOS_TEST_EP_IN = 0x81
-XMOS_TEST_EP_OUT = 0x01
+XMOS_TEST_VID = 0x59e3
+XMOS_TEST_PID = 0xf000
 
 dev = usb.core.find(idVendor=XMOS_TEST_VID, idProduct=XMOS_TEST_PID)
-
-for i in range(256):
-	dev.write(XMOS_TEST_EP_OUT, [i]*512)
-	print map(hex, dev.read(XMOS_TEST_EP_IN, 512, 0, 1000))
+from pylab import *
+for div in arange(0, 2**16):
+	div = int(div)
+	low = div & 0xFFFF
+	high = (div >> 16) & 0xFFFF
+	dev.ctrl_transfer(0x40|0x80, 0x02, high, low, 0)
+	time.sleep(1)
+print map(hex, dev.ctrl_transfer(0x40|0x80, 0x01, 0, 0, 2))

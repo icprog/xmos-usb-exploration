@@ -45,8 +45,8 @@ USB_Descriptor_Device_t DeviceDescriptor =
 	.Protocol               = USB_CSCP_NoDeviceProtocol,
 
 	.Endpoint0Size          = 64,
-	.VendorID               = 0x9999,
-	.ProductID              = 0xffff,
+	.VendorID               = 0x59e3,
+	.ProductID              = 0xf000,
 	.ReleaseNumber          = VERSION_BCD(02.00),
 
 	.ManufacturerStrIndex   = 0x01,

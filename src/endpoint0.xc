@@ -30,13 +30,29 @@
 #include "usb.h"
 #include "DescriptorRequests.h"
 
+/*
+typedef struct setupPacket
+{
+BmRequestType bmRequestType ;
+unsigned char bRequest ;
+unsigned short wValue ;
+unsigned short wIndex ;
+unsigned short wLength ;
+} SetupPacket ;
+*/
+
+
 int HandleVendorRequest(XUD_ep c_ep0_out, XUD_ep c_ep0_in, unsigned char buffer[], SetupPacket& sp, chanend userChannel){
+  unsigned int divider;
   switch(sp.bRequest){
     case 0x01:
       buffer[0] = 0xAA;
       buffer[1] = 0x55;
       return XUD_DoGetRequest(c_ep0_out, c_ep0_in, buffer, 2, sp.wLength );
-
+	case 0x02:
+	  divider = sp.wValue | (sp.wIndex << 16);
+      userChannel <: divider;
+	  return XUD_DoSetRequestStatus(c_ep0_in, 0);
     default:
       break;
   }
