@@ -30,7 +30,7 @@
 #include "usb.h"
 #include "DescriptorRequests.h"
 
-int HandleVendorRequest(XUD_ep c_ep0_out, XUD_ep c_ep0_in, unsigned char buffer[], SetupPacket& sp){
+int HandleVendorRequest(XUD_ep c_ep0_out, XUD_ep c_ep0_in, unsigned char buffer[], SetupPacket& sp, chanend userChannel){
   switch(sp.bRequest){
     case 0x01:
       buffer[0] = 0xAA;
@@ -63,7 +63,7 @@ extern unsigned  len_ConfigurationDescriptorFS;
 
 
 #pragma unsafe arrays
-void Endpoint0( chanend chan_ep0_out, chanend chan_ep0_in){
+void Endpoint0( chanend chan_ep0_out, chanend chan_ep0_in, chanend userChannel){
     unsigned char buffer[1024];
     SetupPacket sp;
     unsigned int current_config = 0;
@@ -172,7 +172,7 @@ void Endpoint0( chanend chan_ep0_out, chanend chan_ep0_in){
               break;
 
             case BM_REQTYPE_TYPE_VENDOR:
-              retVal = HandleVendorRequest(c_ep0_out, c_ep0_in, buffer, sp);
+              retVal = HandleVendorRequest(c_ep0_out, c_ep0_in, buffer, sp, userChannel);
               break;
 
             default:

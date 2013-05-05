@@ -24,67 +24,52 @@
 #include "xud.h"
 #include "usb.h"
 
-#define XUD_EP_COUNT_OUT   2
-#define XUD_EP_COUNT_IN	2
+#define XUD_EP_COUNT_OUT 1
+#define XUD_EP_COUNT_IN	1
 
 #define USB_RST_PORT	XS1_PORT_1I
 
-
-/* Endpoint type tables */
-XUD_EpType epTypeTableOut[XUD_EP_COUNT_OUT] = {XUD_EPTYPE_CTL, XUD_EPTYPE_BUL};
-XUD_EpType epTypeTableIn[XUD_EP_COUNT_IN] =   {XUD_EPTYPE_CTL, XUD_EPTYPE_BUL};
 
 /* USB Port declarations */
 on stdcore[0]: out port p_usb_rst = USB_RST_PORT;
 on stdcore[0]: clock	clk	   = XS1_CLKBLK_3;
 
-void Endpoint0( chanend c_ep0_out, chanend c_ep0_in);
+void Endpoint0( chanend c_ep0_out, chanend c_ep0_in, chanend userChannel);
 
-#define BYTES 512
-
-char reportBufferIN[BYTES];
-char reportBufferOUT[BYTES];
-
-void testIN(chanend chan_ep1_in, chanend in2out) 
-{
-	XUD_ep c_ep1_in = XUD_Init_Ep(chan_ep1_in);
-	char len;
-	while(1) 
-	{
-		for (int i = 0; i < 512; i++)
-			in2out :> reportBufferIN[i];
-		len = XUD_SetBuffer(c_ep1_in, reportBufferIN, 512);
-		if (len < 0)
-		{
-			XUD_ResetEndpoint(c_ep1_in, null);
+void frequencyDrive(chanend getCounter, out port H, out port L) {
+	unsigned int t;
+	unsigned int counter;
+	timer tmr;
+	// 50 kilohertz
+	counter = 1000;
+	tmr :> t;
+	while (1) {
+		select {
+			case getCounter :> counter : break;
+			default: break;
 		}
+		t += counter;
+		tmr when timerafter(t) :> void;
+		H <: 0;
+		L <: 1;
+		t += counter;
+		tmr when timerafter(t) :> void;
+		L <: 0;
+		H <: 1;
 	}
-	return;
-}
+}	
+		
+			
+out port ho = XS1_PORT_1L;
+out port lo = XS1_PORT_1A;
 
-void testOUT(chanend chan_ep1_out, chanend in2out)
-{
-	XUD_ep c_ep1_out = XUD_Init_Ep(chan_ep1_out);
-	char len;
-	while(1)
-	{
-		len = XUD_GetBuffer(c_ep1_out, reportBufferOUT);
-		if (len < 0) 
-		{
-			XUD_ResetEndpoint(c_ep1_out, null);
-		}
-		else {
-			for (int i = 0; i < 512; i++)
-				in2out <: reportBufferOUT[i];
-		}
-	}
-	return;
-}
+XUD_EpType epTypeTableOut[XUD_EP_COUNT_OUT] = {XUD_EPTYPE_CTL};
+XUD_EpType epTypeTableIn[XUD_EP_COUNT_IN] =   {XUD_EPTYPE_CTL};
 
 int main() 
 {
-	chan c_ep_out[2], c_ep_in[2];
-	chan in2out;
+	chan c_ep_out[1], c_ep_in[1];
+	chan counter;
 	par 
 	{
 		
@@ -95,20 +80,14 @@ int main()
 		on stdcore[0]:
 		{
 			set_thread_fast_mode_on();
-			Endpoint0( c_ep_out[0], c_ep_in[0]);
+			Endpoint0( c_ep_out[0], c_ep_in[0], counter);
 		}
-	   
+
 		on stdcore[0]:
 		{
-			set_thread_fast_mode_on();
-			testIN(c_ep_in[1], in2out);
+			frequencyDrive(counter, ho, lo);
 		}
-		on stdcore[0]:
-		{
-			set_thread_fast_mode_on();
-			testOUT(c_ep_out[1], in2out);
 			
-		}
 	}
 
 	return 0;
