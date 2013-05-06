@@ -60,8 +60,8 @@ void frequencyDrive(chanend getCounter, out port H, out port L) {
 }	
 		
 			
-out port ho = XS1_PORT_1L;
-out port lo = XS1_PORT_1A;
+out port ho = XS1_PORT_1A;
+out port lo = XS1_PORT_1C;
 
 XUD_EpType epTypeTableOut[XUD_EP_COUNT_OUT] = {XUD_EPTYPE_CTL};
 XUD_EpType epTypeTableIn[XUD_EP_COUNT_IN] =   {XUD_EPTYPE_CTL};
