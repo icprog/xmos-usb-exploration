@@ -1,5 +1,7 @@
+import sys
 from pylab import *
-d = np.loadtxt("freqRespCompensatedNew.txt").T
+#d = np.loadtxt("freqRespCompensatedNew.txt").T
+d = np.loadtxt(sys.argv[1]).T
 ax1 = subplot(111)
 title("Frequency Domain Characteristics")
 xlabel("Drive Frequency")

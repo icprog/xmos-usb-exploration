@@ -19,4 +19,4 @@ def setFrequency(freq):
 	dev.ctrl_transfer(0x40|0x80, 0x02, low, high, 0)
 
 if __name__ == "__main__":
-	setFrequency(57e3)
+	setFrequency(66.9e3)

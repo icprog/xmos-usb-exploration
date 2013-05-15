@@ -29,9 +29,9 @@ def proportionalLoopVoltage():
 		print freq, phaseError, tankVoltage
 
 def freqSweep():
-	for freq in numpy.linspace(60e3, 50e3, 100):
+	for freq in numpy.linspace(72e3, 60e3, 50):
 		xfun.setFrequency(freq)
-		time.sleep(.1)
+		time.sleep(.05)
 		print freq, getPhase(freq), getTankVoltage()
 
 def fitSine(tList, yList, freq):
@@ -54,16 +54,26 @@ def getWaveforms():
 	return t, d1, d2
 
 def getPhase(freq):
-	t, d1, d2 = getWaveforms()
-	p1, a1, b1 = fitSine(t, d1, freq)
-	p2, a2, b2 = fitSine(t, d2, freq)
-	# -6 degrees because diy current sense transformers suck
-	return p1 - p2 - 6
+	ct = 3
+	results = []
+	for i in range(ct):
+		t, d1, d2 = getWaveforms()
+		p1, a1, b1 = fitSine(t, d1, freq)
+		p2, a2, b2 = fitSine(t, d2, freq)
+		results.append(p1 - p2)
+	stddev = numpy.std(results)
+	preliminaryMean = numpy.mean(results)
+	clean = []
+	for result in results:
+		if numpy.abs(result-preliminaryMean) < stddev:
+			clean.append(result)
+	result = numpy.sum(clean)/len(clean)
+	return result
 
 def pll():
 	phase = []
 	amplitude = []
-	freq = 57e3
+	freq = 67e3
 	setPoint = 0
 	xfun.setFrequency(freq)
 	phase.append(getPhase(freq))
@@ -81,4 +91,4 @@ def pll():
 		time.sleep(.1)
 		
 if __name__ == "__main__":
-	pll()
+	freqSweep()
